@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pagou? Cobrança por Pix para autônomos</title>
+<meta name="description" content="Pagou? organiza as cobranças recorrentes de autônomos: gera o Pix, lembra o cliente e dá baixa sozinho quando o pagamento cai.">
+<style>
+  :root {
+    --bg: #fbfaf7;
+    --surface: #ffffff;
+    --text: #1c1b19;
+    --muted: #5e5b55;
+    --line: #e6e2da;
+    --accent: #0f7a5c;
+    --accent-soft: #e3f3ec;
+    --warn: #b4540a;
+    --warn-soft: #fbeee2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141412;
+      --surface: #1d1d1a;
+      --text: #f0eee9;
+      --muted: #a9a59c;
+      --line: #33322e;
+      --accent: #4cc79b;
+      --accent-soft: #17352a;
+      --warn: #f0a35e;
+      --warn-soft: #3a2a1b;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 17px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 0 16px; }
+  header { padding: 20px 0; display: flex; justify-content: space-between; align-items: center; }
+  .logo { font-weight: 800; font-size: 22px; letter-spacing: -0.02em; }
+  .logo span { color: var(--accent); }
+  .tag { font-size: 13px; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; }
+  .hero { padding: 48px 0 56px; display: grid; gap: 40px; grid-template-columns: 1.2fr 1fr; align-items: center; }
+  h1 { font-size: clamp(32px, 6vw, 52px); line-height: 1.08; letter-spacing: -0.03em; margin: 0 0 18px; }
+  .lead { font-size: 19px; color: var(--muted); margin: 0 0 28px; max-width: 34ch; }
+  .btn { display: inline-block; background: var(--accent); color: #fff; text-decoration: none; font-weight: 600; padding: 12px 22px; border-radius: 10px; }
+  @media (prefers-color-scheme: dark) { .btn { color: #0d1f18; } }
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.06); }
+  .panel h3 { margin: 0 0 4px; font-size: 15px; }
+  .panel .sub { margin: 0 0 14px; font-size: 13px; color: var(--muted); }
+  .row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); font-size: 15px; gap: 12px; }
+  .pill { font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
+  .ok { background: var(--accent-soft); color: var(--accent); }
+  .late { background: var(--warn-soft); color: var(--warn); }
+  .total { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; font-weight: 700; }
+  section { padding: 48px 0; border-top: 1px solid var(--line); }
+  h2 { font-size: 28px; letter-spacing: -0.02em; margin: 0 0 20px; }
+  .steps { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); counter-reset: s; padding: 0; margin: 0; list-style: none; }
+  .steps li { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; counter-increment: s; }
+  .steps li::before { content: counter(s); display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font-weight: 700; font-size: 14px; margin-bottom: 10px; }
+  .steps strong { display: block; margin-bottom: 4px; }
+  .steps p { margin: 0; color: var(--muted); font-size: 15px; }
+  .who { display: flex; flex-wrap: wrap; gap: 10px; padding: 0; margin: 0 0 16px; list-style: none; }
+  .who li { border: 1px solid var(--line); background: var(--surface); padding: 6px 14px; border-radius: 999px; font-size: 15px; }
+  .muted { color: var(--muted); }
+  footer { padding: 32px 0 48px; border-top: 1px solid var(--line); font-size: 14px; color: var(--muted); }
+  footer a { color: var(--accent); }
+  @media (max-width: 720px) {
+    .hero { grid-template-columns: 1fr; padding-top: 24px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">Pagou<span>?</span></div>
+    <div class="tag">Hack Brasil 2026 · Pagamentos &amp; finanças</div>
+  </header>
+
+  <div class="hero">
+    <div>
+      <h1>Cobrar cliente sem constrangimento.</h1>
+      <p class="lead">O Pagou? gera o Pix, lembra o cliente e dá baixa sozinho quando o pagamento cai. Feito para quem trabalha por conta própria.</p>
+      <a class="btn" href="https://github.com/joaodematejr/pagou">Ver o projeto no GitHub</a>
+    </div>
+    <div class="panel" aria-label="Exemplo do painel do mês">
+      <h3>Novembro</h3>
+      <p class="sub">Exemplo com dados fictícios</p>
+      <div class="row"><span>Ana · faxina semanal</span><span class="pill ok">Pago</span></div>
+      <div class="row"><span>Carlos · treino 3x</span><span class="pill ok">Pago</span></div>
+      <div class="row"><span>Marta · aula de inglês</span><span class="pill late">2 dias atrasado</span></div>
+      <div class="row"><span>Júlio · faxina quinzenal</span><span class="pill ok">Pago</span></div>
+      <div class="total"><span>Recebido</span><span>R$ 1.840,00</span></div>
+    </div>
+  </div>
+
+  <section>
+    <h2>O problema</h2>
+    <p>Milhões de autônomos recebem de clientes fixos todo mês e controlam tudo de cabeça. A cobrança vai por mensagem solta, o comprovante se perde na conversa e, no fim do mês, ninguém sabe direito quem pagou.</p>
+    <p class="muted">Cobrar é desconfortável. Muita gente deixa passar para não parecer chata, e o atraso vira prejuízo. Os sistemas de cobrança que existem foram feitos para empresas: pedem CNPJ, integração e boleto.</p>
+  </section>
+
+  <section>
+    <h2>Como funciona</h2>
+    <ol class="steps">
+      <li><strong>Cadastre o cliente</strong><p>Nome, valor e dia de vencimento. Leva menos de um minuto.</p></li>
+      <li><strong>O Pix sai pronto</strong><p>No vencimento, o cliente recebe QR Code, copia e cola e uma página de pagamento.</p></li>
+      <li><strong>Lembrete gentil</strong><p>E-mail automático e um atalho para mandar pelo WhatsApp com a mensagem já escrita.</p></li>
+      <li><strong>Baixa sozinha</strong><p>O Pix caiu, a cobrança vira "pago". Sem conferir extrato, sem pedir comprovante.</p></li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Para quem</h2>
+    <ul class="who">
+      <li>Diaristas</li>
+      <li>Personal trainers</li>
+      <li>Professores particulares</li>
+      <li>Manicures</li>
+      <li>Cuidadores</li>
+      <li>Aulas de música</li>
+    </ul>
+    <p class="muted">Quem tem clientes recorrentes, recebe por Pix e não quer aprender um sistema de gestão.</p>
+  </section>
+
+  <footer>
+    Projeto em construção no Hack Brasil 2026. A demo usa só dados fictícios e ambiente de teste, sem transações reais.
+    Código em <a href="https://github.com/joaodematejr/pagou">github.com/joaodematejr/pagou</a>.
+  </footer>
+</div>
+</body>
+</html>
