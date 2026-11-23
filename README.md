@@ -28,35 +28,69 @@ Trabalhadores autônomos e informais com clientes recorrentes, que recebem por P
 
 Em construção durante o Hack Brasil 2026. Esta seção é atualizada conforme as funcionalidades ficam prontas.
 
-- [ ] Cadastro de clientes e cobranças recorrentes
+- [x] Esqueleto do app (Next.js + Convex) e modelo de dados
+- [x] Cadastro de clientes
+- [ ] Geração mensal das cobranças recorrentes
 - [ ] Geração de Pix em ambiente de teste (sandbox)
 - [ ] Página pública de pagamento
 - [ ] Baixa automática via webhook
 - [ ] Lembretes por e-mail e atalho para WhatsApp
 - [ ] Painel do mês
 
-## Stack prevista
+## Stack
 
-- **Front-end:** Next.js (React, TypeScript)
-- **Back-end e banco em tempo real:** Convex
-- **Pix:** API de PSP em modo de teste (sandbox). Nenhuma transação real é feita na demo.
-- **E-mail:** Resend
+- **Front-end:** Next.js 16 (React, TypeScript, Tailwind)
+- **Back-end e banco em tempo real:** Convex. O painel atualiza sozinho quando um pagamento cai.
+- **Pix:** API v2 da [AbacatePay](https://docs.abacatepay.com) em Modo Teste. Nenhuma transação real é feita na demo.
+- **E-mail:** Resend (previsto)
+
+## Estrutura
+
+```
+app/                  páginas (painel em /, pagamento público em /pagar/[token])
+convex/schema.ts      modelo de dados: clientes, cobrancas, eventosWebhook
+convex/clientes.ts    cadastro e listagem de clientes
+convex/abacatepay.ts  cliente da API de Pix (criar, consultar, simular pagamento)
+convex/http.ts        webhook da AbacatePay (/webhooks/abacatepay)
+lib/dinheiro.ts       formatação e conversão de valores em reais
+docs/                 página pública do projeto (GitHub Pages)
+```
 
 ## Como executar
 
-Pré-requisitos: Node.js 20 ou superior e uma conta de desenvolvedor no PSP de Pix (modo de teste).
+Pré-requisito: Node.js 20 ou superior.
 
 ```bash
 git clone https://github.com/joaodematejr/pagou.git
 cd pagou
 npm install
-cp .env.example .env.local   # preencha as chaves de teste
+
+# Terminal 1: back-end. Na primeira vez pede login no Convex
+# e cria o .env.local com a URL do deployment.
+npx convex dev
+
+# Terminal 2: front-end
 npm run dev
 ```
 
 Depois abra http://localhost:3000.
 
-As instruções detalhadas de configuração (chaves, webhook e dados de exemplo) entram aqui assim que o código for publicado.
+Para testar sem conta no Convex, rode o back-end em modo local anônimo:
+`CONVEX_AGENT_MODE=anonymous npx convex dev`.
+
+### Pix em Modo Teste
+
+1. Crie uma conta na AbacatePay. Toda conta começa em Modo Teste e não precisa de CNPJ.
+2. Gere uma chave de API v2 de teste (começa com `abc_dev_`).
+3. Configure as variáveis no Convex (elas ficam só no servidor):
+
+```bash
+npx convex env set ABACATEPAY_API_KEY abc_dev_...
+npx convex env set ABACATEPAY_WEBHOOK_SECRET <segredo com 32+ caracteres>
+```
+
+4. Cadastre na AbacatePay um webhook v2 para o evento `transparent.completed` apontando para
+   `https://<seu-deployment>.convex.site/webhooks/abacatepay`, com o mesmo segredo.
 
 ## Dados
 
