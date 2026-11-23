@@ -19,6 +19,9 @@ export default defineSchema({
     email: v.optional(v.string()),
     telefone: v.optional(v.string()), // só dígitos, com DDD, para o link do WhatsApp
     ativo: v.boolean(),
+    // Primeiro mês cobrado ("2026-12"). Ausente em clientes anteriores a este
+    // campo, que são cobrados em qualquer mês.
+    inicioCompetencia: v.optional(v.string()),
   }).index("por_ativo", ["ativo"]),
 
   // Uma cobrança por cliente por competência (mês de referência).

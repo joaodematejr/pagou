@@ -10,7 +10,10 @@
 
 import type * as abacatepay from "../abacatepay.js";
 import type * as clientes from "../clientes.js";
+import type * as cobrancas from "../cobrancas.js";
+import type * as crons from "../crons.js";
 import type * as http from "../http.js";
+import type * as lib_datas from "../lib/datas.js";
 import type * as webhooks from "../webhooks.js";
 
 import type {
@@ -22,7 +25,10 @@ import type {
 declare const fullApi: ApiFromModules<{
   abacatepay: typeof abacatepay;
   clientes: typeof clientes;
+  cobrancas: typeof cobrancas;
+  crons: typeof crons;
   http: typeof http;
+  "lib/datas": typeof lib_datas;
   webhooks: typeof webhooks;
 }>;
 

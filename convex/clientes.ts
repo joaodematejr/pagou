@@ -1,5 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { garantirCobranca } from "./cobrancas";
+import { competenciaDe, hojeBrasil, primeiraCompetencia } from "./lib/datas";
 
 export const listar = query({
   args: {},
@@ -37,8 +39,9 @@ export const criar = mutation({
       throw new Error("O dia de vencimento vai de 1 a 28.");
     }
     const telefone = args.telefone?.replace(/\D/g, "") || undefined;
+    const hoje = hojeBrasil();
 
-    return await ctx.db.insert("clientes", {
+    const id = await ctx.db.insert("clientes", {
       nome,
       servico,
       valorCentavos: args.valorCentavos,
@@ -46,6 +49,14 @@ export const criar = mutation({
       email: args.email?.trim() || undefined,
       telefone,
       ativo: true,
+      inicioCompetencia: primeiraCompetencia(hoje, args.diaVencimento),
     });
+
+    // Se o vencimento deste mês ainda não passou, a cobrança já sai agora,
+    // sem esperar o cron do dia seguinte.
+    const cliente = await ctx.db.get(id);
+    if (cliente) await garantirCobranca(ctx, cliente, competenciaDe(hoje));
+
+    return id;
   },
 });

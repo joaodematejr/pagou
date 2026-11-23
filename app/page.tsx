@@ -1,12 +1,26 @@
 "use client";
 
 import { useMutation, useQuery } from "convex/react";
-import { useState, type FormEvent } from "react";
+import { useState, useSyncExternalStore, type FormEvent } from "react";
 import { api } from "@/convex/_generated/api";
+import {
+  competenciaDe,
+  diasEntre,
+  hojeBrasil,
+  nomeDaCompetencia,
+} from "@/convex/lib/datas";
 import { formatarCentavos, reaisParaCentavos } from "@/lib/dinheiro";
+
+// A data de hoje só é lida no navegador. No prerender do servidor fica null,
+// o que evita gravar uma data fixa no HTML estático.
+const semAssinatura = () => () => {};
+function useHoje(): string | null {
+  return useSyncExternalStore(semAssinatura, () => hojeBrasil(), () => null);
+}
 
 export default function Painel() {
   const clientes = useQuery(api.clientes.listar);
+  const hoje = useHoje();
 
   return (
     <main className="mx-auto w-full max-w-3xl px-4 py-10">
@@ -16,6 +30,8 @@ export default function Painel() {
         </h1>
         <p className="mt-1 text-zinc-500">Suas cobranças do mês num lugar só.</p>
       </header>
+
+      {hoje && <CobrancasDoMes hoje={hoje} />}
 
       <NovoCliente />
 
@@ -44,6 +60,95 @@ export default function Painel() {
         )}
       </section>
     </main>
+  );
+}
+
+type Situacao = { rotulo: string; classe: string };
+
+function situacao(status: string, vencimento: string, hoje: string): Situacao {
+  if (status === "paga") {
+    return { rotulo: "Paga", classe: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300" };
+  }
+  if (status === "cancelada" || status === "expirada") {
+    return { rotulo: status === "cancelada" ? "Cancelada" : "Expirada", classe: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400" };
+  }
+  const dias = diasEntre(vencimento, hoje);
+  if (dias > 0) {
+    return {
+      rotulo: dias === 1 ? "1 dia atrasada" : `${dias} dias atrasada`,
+      classe: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300",
+    };
+  }
+  return {
+    rotulo: dias === 0 ? "Vence hoje" : `Vence dia ${vencimento.slice(8, 10)}`,
+    classe: "bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300",
+  };
+}
+
+function CobrancasDoMes({ hoje }: { hoje: string }) {
+  const competencia = competenciaDe(hoje);
+  const cobrancas = useQuery(api.cobrancas.doMes, { competencia });
+
+  if (cobrancas === undefined) {
+    return <p className="mb-10 text-zinc-500">Carregando cobranças...</p>;
+  }
+
+  let recebido = 0;
+  let aReceber = 0;
+  let emAtraso = 0;
+  for (const c of cobrancas) {
+    if (c.status === "paga") recebido += c.valorCentavos;
+    else if (c.status === "pendente") {
+      aReceber += c.valorCentavos;
+      if (diasEntre(c.vencimento, hoje) > 0) emAtraso += c.valorCentavos;
+    }
+  }
+
+  return (
+    <section className="mb-10">
+      <h2 className="mb-3 text-lg font-semibold first-letter:uppercase">
+        {nomeDaCompetencia(competencia)}
+      </h2>
+
+      <div className="mb-4 grid grid-cols-3 gap-3">
+        <Total rotulo="Recebido" valor={recebido} />
+        <Total rotulo="A receber" valor={aReceber} />
+        <Total rotulo="Em atraso" valor={emAtraso} destaque={emAtraso > 0} />
+      </div>
+
+      {cobrancas.length === 0 ? (
+        <p className="text-zinc-500">Nenhuma cobrança neste mês.</p>
+      ) : (
+        <ul className="divide-y divide-zinc-200 rounded-xl border border-zinc-200 dark:divide-zinc-800 dark:border-zinc-800">
+          {cobrancas.map((c) => {
+            const s = situacao(c.status, c.vencimento, hoje);
+            return (
+              <li key={c._id} className="flex items-center justify-between gap-4 p-4">
+                <div className="min-w-0">
+                  <p className="truncate font-medium">{c.nome}</p>
+                  <p className="truncate text-sm text-zinc-500">{c.servico}</p>
+                </div>
+                <div className="flex shrink-0 flex-col items-end gap-1">
+                  <span className="font-semibold tabular-nums">{formatarCentavos(c.valorCentavos)}</span>
+                  <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${s.classe}`}>{s.rotulo}</span>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+function Total({ rotulo, valor, destaque = false }: { rotulo: string; valor: number; destaque?: boolean }) {
+  return (
+    <div className="rounded-xl border border-zinc-200 p-3 dark:border-zinc-800">
+      <p className="text-xs text-zinc-500">{rotulo}</p>
+      <p className={`mt-1 font-semibold tabular-nums ${destaque ? "text-amber-600" : ""}`}>
+        {formatarCentavos(valor)}
+      </p>
+    </div>
   );
 }
 

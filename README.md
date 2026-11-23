@@ -30,7 +30,7 @@ Em construção durante o Hack Brasil 2026. Esta seção é atualizada conforme 
 
 - [x] Esqueleto do app (Next.js + Convex) e modelo de dados
 - [x] Cadastro de clientes
-- [ ] Geração mensal das cobranças recorrentes
+- [x] Geração mensal das cobranças recorrentes (cron diário às 8h de Brasília)
 - [ ] Geração de Pix em ambiente de teste (sandbox)
 - [ ] Página pública de pagamento
 - [ ] Baixa automática via webhook
@@ -50,11 +50,21 @@ Em construção durante o Hack Brasil 2026. Esta seção é atualizada conforme 
 app/                  páginas (painel em /, pagamento público em /pagar/[token])
 convex/schema.ts      modelo de dados: clientes, cobrancas, eventosWebhook
 convex/clientes.ts    cadastro e listagem de clientes
+convex/cobrancas.ts   geração mensal das cobranças e listagem do mês
+convex/crons.ts       cron diário que gera as cobranças que faltam
+convex/lib/datas.ts   datas no fuso de Brasília (competência, vencimento, atraso)
 convex/abacatepay.ts  cliente da API de Pix (criar, consultar, simular pagamento)
 convex/http.ts        webhook da AbacatePay (/webhooks/abacatepay)
 lib/dinheiro.ts       formatação e conversão de valores em reais
 docs/                 página pública do projeto (GitHub Pages)
 ```
+
+## Como as cobranças são geradas
+
+- Cada cliente ativo tem uma cobrança por mês, com vencimento no dia cadastrado (1 a 28, para existir em todo mês).
+- Um cron diário às 8h de Brasília cria as cobranças do mês que faltarem. A geração é idempotente: rodar de novo não duplica.
+- Cliente novo: se o vencimento deste mês ainda não passou, a cobrança deste mês sai no cadastro. Se já passou, a primeira cobrança é no mês seguinte, para não nascer atrasada.
+- "Atrasada" não é gravada no banco. A tela calcula a partir de uma cobrança pendente com vencimento já passado.
 
 ## Como executar
 
