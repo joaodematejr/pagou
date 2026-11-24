@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { garantirCobranca } from "./cobrancas";
 import { competenciaDe, hojeBrasil, primeiraCompetencia } from "./lib/datas";
@@ -25,18 +25,18 @@ export const criar = mutation({
   handler: async (ctx, args) => {
     const nome = args.nome.trim();
     const servico = args.servico.trim();
-    if (!nome) throw new Error("Informe o nome do cliente.");
-    if (!servico) throw new Error("Informe o serviço.");
+    if (!nome) throw new ConvexError("Informe o nome do cliente.");
+    if (!servico) throw new ConvexError("Informe o serviço.");
     // Mínimo da AbacatePay para Pix: 100 centavos.
     if (!Number.isInteger(args.valorCentavos) || args.valorCentavos < 100) {
-      throw new Error("O valor mínimo é R$ 1,00.");
+      throw new ConvexError("O valor mínimo é R$ 1,00.");
     }
     if (
       !Number.isInteger(args.diaVencimento) ||
       args.diaVencimento < 1 ||
       args.diaVencimento > 28
     ) {
-      throw new Error("O dia de vencimento vai de 1 a 28.");
+      throw new ConvexError("O dia de vencimento vai de 1 a 28.");
     }
     const telefone = args.telefone?.replace(/\D/g, "") || undefined;
     const hoje = hojeBrasil();

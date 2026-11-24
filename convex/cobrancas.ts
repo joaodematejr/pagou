@@ -1,7 +1,13 @@
 import { v } from "convex/values";
-import { internalMutation, query, type MutationCtx } from "./_generated/server";
+import {
+  internalMutation,
+  internalQuery,
+  query,
+  type MutationCtx,
+} from "./_generated/server";
 import type { Doc } from "./_generated/dataModel";
 import { competenciaDe, competenciaValida, hojeBrasil, vencimentoDe } from "./lib/datas";
+import { pixValido } from "./lib/pix";
 
 /** Token aleatório (128 bits) da página pública de pagamento. */
 function novoToken(): string {
@@ -93,5 +99,92 @@ export const doMes = query({
     return linhas.sort(
       (a, b) => a.vencimento.localeCompare(b.vencimento) || a.nome.localeCompare(b.nome),
     );
+  },
+});
+
+// ---------------------------------------------------------------------------
+// Página pública de pagamento e Pix
+// ---------------------------------------------------------------------------
+
+/**
+ * O que o cliente vê na página /pagar/[token]. Expõe só o necessário para
+ * pagar: nada de e-mail, telefone ou id interno.
+ */
+export const porToken = query({
+  args: { token: v.string() },
+  handler: async (ctx, { token }) => {
+    const c = await ctx.db
+      .query("cobrancas")
+      .withIndex("por_token", (q) => q.eq("tokenPublico", token))
+      .unique();
+    if (!c) return null;
+    const cliente = await ctx.db.get(c.clienteId);
+    return {
+      primeiroNome: cliente?.nome.split(" ")[0] ?? "",
+      servico: cliente?.servico ?? "",
+      competencia: c.competencia,
+      vencimento: c.vencimento,
+      valorCentavos: c.valorCentavos,
+      status: c.status,
+      brCode: c.brCode,
+      brCodeBase64: c.brCodeBase64,
+      pixExpiraEm: c.pixExpiraEm,
+      pixModoTeste: c.pixModoTeste ?? false,
+      pagaEm: c.pagaEm,
+    };
+  },
+});
+
+/** Cobrança completa pelo token, para as actions de Pix. */
+export const paraPix = internalQuery({
+  args: { token: v.string() },
+  handler: async (ctx, { token }) => {
+    const c = await ctx.db
+      .query("cobrancas")
+      .withIndex("por_token", (q) => q.eq("tokenPublico", token))
+      .unique();
+    if (!c) return null;
+    const cliente = await ctx.db.get(c.clienteId);
+    return { ...c, servico: cliente?.servico ?? "Cobrança" };
+  },
+});
+
+/**
+ * Grava o Pix criado no PSP. Se outra aba já gravou um Pix válido nesse meio
+ * tempo, mantém o existente para o cliente não ver o QR Code mudar.
+ */
+export const salvarPix = internalMutation({
+  args: {
+    cobrancaId: v.id("cobrancas"),
+    pixId: v.string(),
+    brCode: v.string(),
+    brCodeBase64: v.string(),
+    pixExpiraEm: v.string(),
+    pixModoTeste: v.boolean(),
+  },
+  handler: async (ctx, { cobrancaId, ...pix }) => {
+    const c = await ctx.db.get(cobrancaId);
+    if (!c || c.status !== "pendente") return false;
+    if (c.pixId && pixValido(c.pixExpiraEm, Date.now())) return false;
+    await ctx.db.patch(cobrancaId, pix);
+    return true;
+  },
+});
+
+/**
+ * Dá baixa na cobrança dona do Pix. Idempotente: usado pelo webhook, pela
+ * consulta de status e pela simulação, que podem chegar em qualquer ordem.
+ */
+export const marcarPagaPorPix = internalMutation({
+  args: { pixId: v.string() },
+  handler: async (ctx, { pixId }) => {
+    const c = await ctx.db
+      .query("cobrancas")
+      .withIndex("por_pix", (q) => q.eq("pixId", pixId))
+      .unique();
+    if (!c) return "nao_encontrada" as const;
+    if (c.status === "paga") return "ja_paga" as const;
+    await ctx.db.patch(c._id, { status: "paga", pagaEm: Date.now() });
+    return "paga" as const;
   },
 });

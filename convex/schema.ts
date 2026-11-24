@@ -38,6 +38,7 @@ export default defineSchema({
     brCode: v.optional(v.string()),
     brCodeBase64: v.optional(v.string()),
     pixExpiraEm: v.optional(v.string()),
+    pixModoTeste: v.optional(v.boolean()),
     pagaEm: v.optional(v.number()),
   })
     .index("por_cliente_competencia", ["clienteId", "competencia"])

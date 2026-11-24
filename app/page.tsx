@@ -10,6 +10,7 @@ import {
   nomeDaCompetencia,
 } from "@/convex/lib/datas";
 import { formatarCentavos, reaisParaCentavos } from "@/lib/dinheiro";
+import { mensagemDeErro } from "@/lib/erros";
 
 // A data de hoje só é lida no navegador. No prerender do servidor fica null,
 // o que evita gravar uma data fixa no HTML estático.
@@ -127,6 +128,16 @@ function CobrancasDoMes({ hoje }: { hoje: string }) {
                 <div className="min-w-0">
                   <p className="truncate font-medium">{c.nome}</p>
                   <p className="truncate text-sm text-zinc-500">{c.servico}</p>
+                  {c.status === "pendente" && (
+                    <a
+                      href={`/pagar/${c.tokenPublico}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm font-medium text-emerald-700 underline-offset-2 hover:underline dark:text-emerald-400"
+                    >
+                      Link de pagamento
+                    </a>
+                  )}
                 </div>
                 <div className="flex shrink-0 flex-col items-end gap-1">
                   <span className="font-semibold tabular-nums">{formatarCentavos(c.valorCentavos)}</span>
@@ -179,7 +190,7 @@ function NovoCliente() {
       });
       form.reset();
     } catch (err) {
-      setErro(err instanceof Error ? err.message : "Não foi possível salvar.");
+      setErro(mensagemDeErro(err, "Não foi possível salvar."));
     } finally {
       setSalvando(false);
     }

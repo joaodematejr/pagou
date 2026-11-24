@@ -14,6 +14,8 @@ import type * as cobrancas from "../cobrancas.js";
 import type * as crons from "../crons.js";
 import type * as http from "../http.js";
 import type * as lib_datas from "../lib/datas.js";
+import type * as lib_pix from "../lib/pix.js";
+import type * as pix from "../pix.js";
 import type * as webhooks from "../webhooks.js";
 
 import type {
@@ -29,6 +31,8 @@ declare const fullApi: ApiFromModules<{
   crons: typeof crons;
   http: typeof http;
   "lib/datas": typeof lib_datas;
+  "lib/pix": typeof lib_pix;
+  pix: typeof pix;
   webhooks: typeof webhooks;
 }>;
 

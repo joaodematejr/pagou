@@ -2,7 +2,16 @@
 // Referência: https://docs.abacatepay.com/pages/transparents/create.md
 // Roda só no servidor (actions do Convex). A chave nunca vai para o navegador.
 
-const BASE_URL = "https://api.abacatepay.com/v2";
+// ABACATEPAY_BASE_URL só existe para testes locais contra um servidor falso.
+// Em uso normal fica ausente e vale a API real.
+function baseUrl(): string {
+  return process.env.ABACATEPAY_BASE_URL ?? "https://api.abacatepay.com/v2";
+}
+
+/** True quando a chave configurada é de Modo Teste. */
+export function chaveDeTeste(): boolean {
+  return (process.env.ABACATEPAY_API_KEY ?? "").startsWith("abc_dev_");
+}
 
 export type StatusPix =
   | "PENDING"
@@ -38,7 +47,7 @@ function chave(): string {
 }
 
 async function chamar<T>(caminho: string, init: RequestInit = {}): Promise<T> {
-  const resposta = await fetch(`${BASE_URL}${caminho}`, {
+  const resposta = await fetch(`${baseUrl()}${caminho}`, {
     ...init,
     headers: {
       Authorization: `Bearer ${chave()}`,

@@ -31,8 +31,8 @@ Em construção durante o Hack Brasil 2026. Esta seção é atualizada conforme 
 - [x] Esqueleto do app (Next.js + Convex) e modelo de dados
 - [x] Cadastro de clientes
 - [x] Geração mensal das cobranças recorrentes (cron diário às 8h de Brasília)
-- [ ] Geração de Pix em ambiente de teste (sandbox)
-- [ ] Página pública de pagamento
+- [x] Geração de Pix em ambiente de teste (sandbox)
+- [x] Página pública de pagamento, com QR Code, copia e cola e botão "Já paguei"
 - [ ] Baixa automática via webhook
 - [ ] Lembretes por e-mail e atalho para WhatsApp
 - [ ] Painel do mês
@@ -54,6 +54,7 @@ convex/cobrancas.ts   geração mensal das cobranças e listagem do mês
 convex/crons.ts       cron diário que gera as cobranças que faltam
 convex/lib/datas.ts   datas no fuso de Brasília (competência, vencimento, atraso)
 convex/abacatepay.ts  cliente da API de Pix (criar, consultar, simular pagamento)
+convex/pix.ts         actions da página de pagamento: gerar Pix, verificar e simular
 convex/http.ts        webhook da AbacatePay (/webhooks/abacatepay)
 lib/dinheiro.ts       formatação e conversão de valores em reais
 docs/                 página pública do projeto (GitHub Pages)
@@ -65,6 +66,15 @@ docs/                 página pública do projeto (GitHub Pages)
 - Um cron diário às 8h de Brasília cria as cobranças do mês que faltarem. A geração é idempotente: rodar de novo não duplica.
 - Cliente novo: se o vencimento deste mês ainda não passou, a cobrança deste mês sai no cadastro. Se já passou, a primeira cobrança é no mês seguinte, para não nascer atrasada.
 - "Atrasada" não é gravada no banco. A tela calcula a partir de uma cobrança pendente com vencimento já passado.
+
+## Como o cliente paga
+
+1. Quem cobra copia o "Link de pagamento" da cobrança no painel e manda ao cliente.
+2. Ao abrir o link, o Pix é gerado na hora (QR Code e copia e cola). Se expirar, um novo é gerado na próxima visita.
+3. A baixa acontece de dois jeitos, ambos idempotentes: pelo webhook da AbacatePay ou pelo botão "Já paguei", que consulta o status do Pix. Se o webhook falhar, o botão resolve.
+4. Em Modo Teste, a página mostra um botão "Simular pagamento" para demonstração.
+
+A página pública mostra só o primeiro nome do cliente, o serviço e o valor. O link usa um token aleatório de 128 bits.
 
 ## Como executar
 
